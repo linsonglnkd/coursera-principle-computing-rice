@@ -1,4 +1,4 @@
-# coursers-principle-computing-rice
+# coursera-principle-computing-rice
 
 Two courses:
 
