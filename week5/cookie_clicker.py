@@ -3,6 +3,7 @@ Cookie Clicker Simulator
 """
 
 import simpleplot
+import math
 
 # Used to increase the timeout, if necessary
 import codeskulptor
@@ -29,10 +30,10 @@ class ClickerState:
         """
         Return human readable state
         """
-        result =  "total cookies produced: " + str(self._total_cookies_produced) + "\n" \
-                + "current number of cookies: " + str(self._current_number_cookies) + "\n" \
-                + "current time: " + str(self._current_time) + "\n" \
-                + "current CPS: " + str(self._current_cps)
+        result = "Time: " +  str(self._current_time) + "\n" \
+                 + "Current Cookies: " + str(self._current_number_cookies) + "\n" \
+                 + "CPS: " + str(self._current_cps) + "\n" \
+                 + "Total Cookies: " + str(self._total_cookies_produced)
         return result
         
     def get_cookies(self):
@@ -82,9 +83,11 @@ class ClickerState:
         Should return a float with no fractional part
         """
         delta_cookies = cookies - self._current_number_cookies
+
         if delta_cookies < 0:
             return 0.0
-        return int(delta_cookies * 1.0 / self._current_cps + 0.99999999999999999999) * 1.0
+        #return int(delta_cookies * 1.0 / self._current_cps + 0.99999999999999999999) * 1.0
+        return math.ceil(delta_cookies * 1.0 / self._current_cps) * 1.0
     
     def wait(self, time):
         """
@@ -132,7 +135,7 @@ def simulate_clicker(build_info, duration, strategy):
         clicker_state.wait(purchase_time)
         clicker_state.buy_item(item_to_buy, current_build_info.get_cost(item_to_buy), \
                                current_build_info.get_cps(item_to_buy))
-        print purchase_time
+        current_build_info.update_item(item_to_buy)
     clicker_state.wait(duration - clicker_state.get_time())
     return clicker_state
 
@@ -162,19 +165,39 @@ def strategy_cheap(cookies, cps, history, time_left, build_info):
     """
     Always buy the cheapest item you can afford in the time left.
     """
-    return None
+    cookies_afford = cookies + cps * time_left
+    items = build_info.build_items()
+    result = None
+    cheapest_cost = -1
+    for item in items:
+        cost = build_info.get_cost(item)
+        if cheapest_cost == -1:
+            cheapest_cost = cost
+        if cheapest_cost >= cost and cookies_afford >= cost:
+            result = item
+            cheapest_cost = cost
+    return result
 
 def strategy_expensive(cookies, cps, history, time_left, build_info):
     """
     Always buy the most expensive item you can afford in the time left.
     """
-    return None
+    cookies_afford = cookies + cps * time_left
+    items = build_info.build_items()
+    result = None
+    expensive_cost = -1
+    for item in items:
+        cost = build_info.get_cost(item)
+        if expensive_cost <= cost and cookies_afford >= cost:
+            result = item
+            expensive_cost = cost
+    return result
 
 def strategy_best(cookies, cps, history, time_left, build_info):
     """
     The best strategy that you are able to implement.
     """
-    return None
+    return strategy_expensive(cookies, cps, history, time_left, build_info)
         
 def run_strategy(strategy_name, time, strategy):
     """
@@ -196,17 +219,16 @@ def run():
     """
     Run the simulator.
     """    
-    run_strategy("Cursor", SIM_TIME, strategy_cursor_broken)
+    # run_strategy("Cursor", SIM_TIME, strategy_cursor_broken)
 
     # Add calls to run_strategy to run additional strategies
     # run_strategy("Cheap", SIM_TIME, strategy_cheap)
     # run_strategy("Expensive", SIM_TIME, strategy_expensive)
-    # run_strategy("Best", SIM_TIME, strategy_best)
+    run_strategy("Best", SIM_TIME, strategy_best)
     
-#run()
+run()
 
-#print simulate_clicker(provided.BuildInfo({'Cursor': [15.0, 0.10000000000000001]}, 1.15), 500.0, strategy_cursor_broken)
-
+#a = simulate_clicker(provided.BuildInfo({'Cursor': [15.0, 0.10000000000000001]}, 1.15), 500.0, strategy_cursor_broken)
 #obj = ClickerState() 
 #obj.wait(78.0) 
 #obj.buy_item('item', 1.0, 1.0)
