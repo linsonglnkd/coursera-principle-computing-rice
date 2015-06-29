@@ -197,14 +197,32 @@ def strategy_best(cookies, cps, history, time_left, build_info):
     """
     The best strategy that you are able to implement.
     """
-    return strategy_expensive(cookies, cps, history, time_left, build_info)
-        
+    
+    # calculate the slope = upgrade_cost / cps incremental, pick the lowest slope
+    cookies_afford = cookies + cps * time_left
+    items = build_info.build_items()
+    result = None
+    tmp_slope = -1
+    for item in items:
+        cost = build_info.get_cost(item)
+        inc_cps = build_info.get_cps(item)
+        slope = cost / inc_cps
+        if cookies_afford >= cost:
+            if tmp_slope == -1: 
+                tmp_slope = slope
+            if tmp_slope >= slope:
+                result = item
+                tmp_slope = slope
+    return result
+
 def run_strategy(strategy_name, time, strategy):
     """
     Run a simulation for the given time with one strategy.
     """
     state = simulate_clicker(provided.BuildInfo(), time, strategy)
     print strategy_name, ":", state
+    #print state.get_history()
+    print
 
     # Plot total cookies over time
 
@@ -222,14 +240,9 @@ def run():
     # run_strategy("Cursor", SIM_TIME, strategy_cursor_broken)
 
     # Add calls to run_strategy to run additional strategies
-    # run_strategy("Cheap", SIM_TIME, strategy_cheap)
-    # run_strategy("Expensive", SIM_TIME, strategy_expensive)
+    run_strategy("Cheap", SIM_TIME, strategy_cheap)
+    run_strategy("Expensive", SIM_TIME, strategy_expensive)
     run_strategy("Best", SIM_TIME, strategy_best)
     
 run()
 
-#a = simulate_clicker(provided.BuildInfo({'Cursor': [15.0, 0.10000000000000001]}, 1.15), 500.0, strategy_cursor_broken)
-#obj = ClickerState() 
-#obj.wait(78.0) 
-#obj.buy_item('item', 1.0, 1.0)
-#print obj
